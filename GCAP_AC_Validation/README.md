@@ -1,8 +1,6 @@
 # GCAP validation and survival analysis
 
-This repository contains the R code used for GCAP validation, tumor-purity sensitivity analyses, and ecDNA survival analyses in pediatric rhabdomyosarcoma.
-
-The script is a simplified public version of the analysis code. It uses relative paths, does not contain institution-specific directories, does not write result files, and does not print intermediate output. All result tables remain available as R objects after the script is run.
+This repository contains the R code used for GCAP validation, tumor-purity sensitivity analyses, and ecDNA survival analyses for Saoud et al RMS ecDNA manuscript.
 
 ## Repository structure
 
