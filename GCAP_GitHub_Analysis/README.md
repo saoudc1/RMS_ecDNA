@@ -2,8 +2,6 @@
 
 This repository contains the R code used for GCAP validation, tumor-purity sensitivity analyses, and ecDNA survival analyses in pediatric rhabdomyosarcoma ecDNA project by Saoud et al.
 
-The script is a simplified public version of the analysis code. It uses relative paths, does not contain institution-specific directories, does not write result files, and does not print intermediate output. All result tables remain available as R objects after the script is run.
-
 ## Repository structure
 
 ```text
@@ -69,6 +67,6 @@ The ERMS multivariable Firth Cox model adjusts for ecDNA status, TP53 alteration
 
 ## Data availability
 
-The repository does not include patient-level clinical or sequencing data by default. Place only data that are approved for public release in the `data/` directory. Do not upload protected health information or restricted-access genomic data to GitHub.
+The repository does not include patient-level clinical or sequencing data by default. 
 
 See `data/README.md` for the expected filenames and columns.
