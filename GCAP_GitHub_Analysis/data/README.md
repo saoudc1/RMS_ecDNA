@@ -61,6 +61,3 @@ Required fields before R name normalization:
 
 The supplied analysis expects these to become `Patient.ID`, `Local.Stage.Clinical.Group`, and `age.sex` after `make.names()`.
 
-## Important
-
-Only include de-identified data that are authorized for public release. Restricted-access sequencing data should remain in the appropriate controlled-access repository rather than being committed to GitHub.
