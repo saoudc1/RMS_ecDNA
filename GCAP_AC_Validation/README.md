@@ -65,8 +65,4 @@ ecDNA > chromosomal amplification > no focal amplification
 
 The ERMS multivariable Firth Cox model adjusts for ecDNA status, TP53 alteration status, age group, sex, local stage, and clinical group, matching the supplied analysis script.
 
-## Data availability
-
-The repository does not include patient-level clinical or sequencing data by default. Place only data that are approved for public release in the `data/` directory. Do not upload protected health information or restricted-access genomic data to GitHub.
-
 See `data/README.md` for the expected filenames and columns.
