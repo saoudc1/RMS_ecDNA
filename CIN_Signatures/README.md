@@ -31,7 +31,7 @@ Place the required files in the `data/` directory:
 
 - `ASCAT_segments/`: ASCAT segment files matching `*_tumor.segments_raw.txt`; subdirectories are allowed.
 - `Joined_final.csv`: AmpliconClassifier-derived sample and amplicon annotations.
-- `WGS_RMS_noMRN.csv`: clinical/sample mapping file.
+- `WGS_RMS_MSK_KIDS.csv`: clinical/sample mapping file.
 
 The ASCAT segment files must contain the columns `chr`, `startpos`, `endpos`, `nAraw`, and `nBraw`.
 
