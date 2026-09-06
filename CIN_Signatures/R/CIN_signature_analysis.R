@@ -17,7 +17,7 @@ suppressPackageStartupMessages({
 # Inputs
 base_dir <- file.path("data", "ASCAT_segments")
 amplicon_file <- file.path("data", "Joined_final.csv")
-clinical_file <- file.path("data", "WGS_RMS_noMRN.csv")
+clinical_file <- file.path("data", "WGS_RMS_MSK_KIDS.csv")
 
 # =============================================================================
 # 1. INPUTS
