@@ -1,6 +1,6 @@
 # =============================================================================
 # ASCAT-derived CIN signature analysis in RMS
-# Saoud et al. CCR 2026
+# Saoud et al.
 # =============================================================================
 suppressPackageStartupMessages({
   library(CINSignatureQuantification)
