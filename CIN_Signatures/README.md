@@ -9,11 +9,6 @@ CIN_Signature_GitHub/
 ├── README.md
 ├── R/
 │   └── CIN_signature_analysis.R
-└── data/
-    ├── ASCAT_segments/
-    ├── Joined_final.csv
-    ├── WGS_RMS_noMRN.csv
-    └── README.md
 ```
 
 ## Requirements
@@ -47,8 +42,6 @@ Run from the repository root:
 ```r
 source("R/CIN_signature_analysis.R")
 ```
-
-The script does not write files or save figures. Statistical result tables, processed datasets, and ggplot objects remain available in the R session.
 
 Key result objects include:
 
