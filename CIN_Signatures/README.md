@@ -8,7 +8,7 @@ This repository contains the R code used to quantify and compare copy-number ins
 CIN_Signature_GitHub/
 ├── README.md
 ├── R/
-│   └── CIN_signature_analysis.R
+ └── CIN_signature_analysis.R
 ```
 
 ## Requirements
