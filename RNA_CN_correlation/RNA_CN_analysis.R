@@ -369,12 +369,6 @@ amp_gene_long <- amp |>
 
 # =============================================================================
 # 6. ASSIGN GENE-LEVEL AMPLIFICATION ARCHITECTURE
-#
-# ChrAmp = BFB, Linear, or Complex
-# Mixed = same gene present in both ecDNA and ChrAmp
-#
-# Mixed is identified first and then excluded from downstream analysis.
-# "Other" AmpliconClassifier categories are not included.
 # =============================================================================
 
 gene_architecture <- amp_gene_long |>
@@ -541,8 +535,6 @@ group_counts <- analysis_data |>
 
 # =============================================================================
 # 9. AMPLIFIED VS NON-AMPLIFIED RNA EXPRESSION
-#
-# ChrAmp + ecDNA vs NoFocalAmp
 # =============================================================================
 
 amp_vs_noamp <- analysis_data |>
@@ -1174,10 +1166,6 @@ repeated_patients <- patient_sample_counts |>
 
 # -----------------------------------------------------------------------------
 # 19B. One-sample-per-patient sensitivity analysis
-#
-# A single representative sample is chosen deterministically for each patient
-# using alphabetical sample_name order. The same sample is retained for all
-# genes from that patient.
 # -----------------------------------------------------------------------------
 
 representative_samples <- analysis_data |>
