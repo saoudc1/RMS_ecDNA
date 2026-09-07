@@ -1,6 +1,6 @@
 # ============================================================
 # RMS WGS ecDNA analysis
-# Saoud et al., CCR 2026
+# Saoud et al.
 # ============================================================
 library(ggplot2)
 library(dplyr)
@@ -2768,3 +2768,301 @@ oncogene_ecDNA_proportion <- oncogene_amplicon_long |>
   )
 
 oncogene_ecDNA_proportion
+
+
+
+# Survival analysis of WGS 
+# ============================================================
+
+wgs_patient_class <- cohort_samples %>%
+  dplyr::filter(!is.na(patient)) %>%
+  dplyr::group_by(patient) %>%
+  dplyr::summarise(
+    cancer_subtype = dplyr::first(na.omit(cancer_subtype)),
+    
+    amplicon_class = dplyr::case_when(
+      any(Broad_classification == "ecDNA", na.rm = TRUE) ~ "ecDNA",
+      any(Broad_classification == "Chromosomal", na.rm = TRUE) ~ "Chromosomal",
+      TRUE ~ "No focal amplification"
+    ),
+    
+    .groups = "drop"
+  ) %>%
+  dplyr::mutate(
+    source = ifelse(
+      grepl("^SJ", patient),
+      "SJ/CCDI",
+      "MSK"
+    )
+  )
+
+
+# ============================================================
+# 2. MSK SURVIVAL
+# ============================================================
+
+msk_survival <- read.csv(
+  "/data1/antonesc/saoudc1/ecDNA_RMS/RMS_4_2026/RMS_ALL_survival_4_2026.csv",
+  stringsAsFactors = FALSE,
+  check.names = TRUE
+)
+
+
+msk_surv <- msk_survival %>%
+  dplyr::transmute(
+    patient = as.character(Patient.ID),
+    
+    time = as.numeric(Time_of_FU),
+    
+    event = ifelse(
+      toupper(Status..NED..AWD.DOD.) == "DOD",
+      1,
+      0
+    )
+  ) %>%
+  dplyr::group_by(patient) %>%
+  dplyr::summarise(
+    time = ifelse(
+      all(is.na(time)),
+      NA_real_,
+      max(time, na.rm = TRUE)
+    ),
+    
+    event = max(event, na.rm = TRUE),
+    
+    .groups = "drop"
+  )
+
+
+# ============================================================
+# 3. SJ / CCDI SURVIVAL
+# ============================================================
+ccdi_patients = read.csv ("/data1/antonesc/saoudc1/ecDNA_SARCOMA/patients (1).csv")
+ccdi_surv <- ccdi_patients %>%
+  dplyr::transmute(
+    patient = as.character(patient_id),
+    
+    time = as.numeric(OS_months),
+    
+    event = dplyr::case_when(
+      toupper(OS_status) == "DECEASED" ~ 1,
+      toupper(OS_status) == "ALIVE" ~ 0,
+      TRUE ~ NA_real_
+    )
+  )
+
+
+# ============================================================
+# 4. COMBINE WGS CLASS + SURVIVAL
+# ============================================================
+
+msk_final <- wgs_patient_class %>%
+  dplyr::filter(source == "MSK") %>%
+  dplyr::inner_join(
+    msk_surv,
+    by = "patient"
+  )
+
+
+ccdi_final <- wgs_patient_class %>%
+  dplyr::filter(source == "SJ/CCDI") %>%
+  dplyr::inner_join(
+    ccdi_surv,
+    by = "patient"
+  )
+
+
+wgs_survival <- dplyr::bind_rows(
+  msk_final,
+  ccdi_final
+) %>%
+  dplyr::filter(
+    !is.na(time),
+    !is.na(event),
+    !is.na(amplicon_class)
+  ) %>%
+  dplyr::mutate(
+    
+    amplicon_class = factor(
+      amplicon_class,
+      levels = c(
+        "No focal amplification",
+        "Chromosomal",
+        "ecDNA"
+      )
+    ),
+    
+    ecDNA_status = factor(
+      ifelse(
+        amplicon_class == "ecDNA",
+        "ecDNA",
+        "non-ecDNA"
+      ),
+      levels = c(
+        "non-ecDNA",
+        "ecDNA"
+      )
+    )
+  )
+
+
+# Check cohort
+wgs_survival %>%
+  dplyr::count(
+    source,
+    cancer_subtype,
+    amplicon_class
+  )
+
+
+# ============================================================
+# 5. OVERALL WGS SURVIVAL: GLOBAL + PAIRWISE LOG-RANK TESTS
+# ============================================================
+
+survival_formula <- survival::Surv(time, event) ~ amplicon_class
+
+fit_all <- survival::survfit(
+  survival_formula,
+  data = wgs_survival
+)
+
+global_test <- survival::survdiff(
+  survival_formula,
+  data = wgs_survival
+)
+
+global_p <- stats::pchisq(
+  global_test$chisq,
+  df = length(global_test$n) - 1,
+  lower.tail = FALSE
+)
+
+pairwise_classes <- combn(
+  levels(droplevels(wgs_survival$amplicon_class)),
+  2,
+  simplify = FALSE
+)
+
+pairwise_logrank <- lapply(
+  pairwise_classes,
+  function(pair) {
+    df_pair <- wgs_survival %>%
+      dplyr::filter(
+        amplicon_class %in% pair
+      ) %>%
+      droplevels()
+
+    test_pair <- survival::survdiff(
+      survival::Surv(time, event) ~ amplicon_class,
+      data = df_pair
+    )
+
+    p_value <- stats::pchisq(
+      test_pair$chisq,
+      df = 1,
+      lower.tail = FALSE
+    )
+
+    data.frame(
+      group1 = pair[1],
+      group2 = pair[2],
+      p_value = p_value
+    )
+  }
+) %>%
+  dplyr::bind_rows() %>%
+  dplyr::mutate(
+    FDR = stats::p.adjust(
+      p_value,
+      method = "BH"
+    )
+  )
+
+format_p <- function(p) {
+  if (is.na(p)) return("NA")
+  if (p < 0.001) return("<0.001")
+  sprintf("%.3f", p)
+}
+
+pairwise_logrank <- pairwise_logrank %>%
+  dplyr::mutate(
+    label = paste0(
+      group1,
+      " vs ",
+      group2,
+      ": FDR P=",
+      vapply(FDR, format_p, character(1))
+    )
+  )
+
+p_all <- survminer::ggsurvplot(
+  fit_all,
+  data = wgs_survival,
+  risk.table = TRUE,
+  pval = FALSE,
+  conf.int = FALSE,
+  palette = c(
+    "#008B45",
+    "#EE0000",
+    "#3B4992"
+  ),
+  legend.title = "Amplicon class",
+  legend.labs = c(
+    "No focal amplification",
+    "Chromosomal",
+    "ecDNA"
+  ),
+  xlab = "Follow-up time",
+  ylab = "Survival probability",
+  ggtheme = ggplot2::theme_classic()
+)
+
+max_time <- max(
+  wgs_survival$time,
+  na.rm = TRUE
+)
+
+annotation_text <- c(
+  paste0(
+    "Global log-rank P=",
+    format_p(global_p)
+  ),
+  pairwise_logrank$label
+)
+
+annotation_df <- data.frame(
+  x = rep(
+    0.55 * max_time,
+    length(annotation_text)
+  ),
+  y = seq(
+    from = 0.34,
+    by = -0.07,
+    length.out = length(annotation_text)
+  ),
+  label = annotation_text
+)
+
+p_all$plot <- p_all$plot +
+  ggplot2::geom_text(
+    data = annotation_df,
+    ggplot2::aes(
+      x = x,
+      y = y,
+      label = label
+    ),
+    inherit.aes = FALSE,
+    hjust = 0,
+    size = 4
+  )
+
+print(p_all)
+
+global_logrank_result <- data.frame(
+  test = "Global log-rank",
+  p_value = global_p
+)
+
+global_logrank_result
+pairwise_logrank
+
